@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.6;
 
-import "./../contracts/math/SafeMath.sol";
-import "./../utils/Utils.sol";
-import "./../utils/Owners.sol";
+import "https://github.com/Woonkly/OpenZeppelinBaseContracts/contracts/math/SafeMath.sol";
+import "https://github.com/Woonkly/MartinHSolUtils/Utils.sol";
+import "https://github.com/Woonkly/MartinHSolUtils/Owners.sol";
 
 
 contract Investing  is Owners{

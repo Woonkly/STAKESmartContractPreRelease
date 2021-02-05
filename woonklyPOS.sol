@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.6;
 
-import "./../contracts/math/SafeMath.sol";
-import "./../contracts/token/ERC20/ERC20.sol";
-import "./../contracts/utils/ReentrancyGuard.sol";
+import "https://github.com/Woonkly/OpenZeppelinBaseContracts/contracts/math/SafeMath.sol";
+import "https://github.com/Woonkly/OpenZeppelinBaseContracts/contracts/token/ERC20/ERC20.sol";
+import "https://github.com/Woonkly/OpenZeppelinBaseContracts/contracts/utils/ReentrancyGuard.sol";
 
-import "./../utils/Utils.sol";
+import "https://github.com/Woonkly/MartinHSolUtils/Utils.sol";
 
-import "./Pausabled.sol";
-import "./Erc20Manager.sol";
-import "./StakeManager.sol";
-import "./IWStaked.sol";
-import "./IInvestiable.sol";
+import "https://github.com/Woonkly/STAKESmartContractPreRelease/Pausabled.sol";
+import "https://github.com/Woonkly/STAKESmartContractPreRelease/Erc20Manager.sol";
+import "https://github.com/Woonkly/STAKESmartContractPreRelease/StakeManager.sol";
+import "https://github.com/Woonkly/STAKESmartContractPreRelease/IWStaked.sol";
+import "https://github.com/Woonkly/STAKESmartContractPreRelease/IInvestiable.sol";
 
 
 contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
@@ -541,7 +541,7 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
     
 
 
-    function getCalcRewardAmount(address account,  uint256 amount) public  returns(uint256,uint256){
+    function getCalcRewardAmount(address account,  uint256 amount) public  view returns(uint256,uint256){
         
         if(!_stakes.StakeExist(account)) return (0,0);
 
@@ -603,7 +603,7 @@ struct Stake {
 
 
 
-    function calcTotalRewards(uint256 amount) public  returns (uint256){
+    function calcTotalRewards(uint256 amount) public view  returns (uint256){
         uint256 remainder;
         uint256 woopsRewards;
         uint256 ind=0;
@@ -1043,7 +1043,7 @@ struct Stake {
 
 
 
-    function getSolvencyCOIN() public  returns(bool,uint256){
+    function getSolvencyCOIN() public view returns(bool,uint256){
         uint256 ind=0;
         uint256 funds=0;
         uint256 rews=0;
@@ -1075,7 +1075,7 @@ struct Stadistic{
 
 
 
-    function getSolvency(address sc) public  returns(bool,uint256){
+    function getSolvency(address sc) public view  returns(bool,uint256){
         
         Stadistic memory s;
         
@@ -1096,7 +1096,7 @@ struct Stadistic{
 
 
 
-    function getStatistics(address sc) public  returns(uint256,uint256,uint256,uint256,uint256){
+    function getStatistics(address sc) public view  returns(uint256,uint256,uint256,uint256,uint256){
 
 
         uint256 fund;
