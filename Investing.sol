@@ -246,7 +246,7 @@ function updateFund(address account,uint256 withdraw) public onlyIsInOwners  ret
 
     _Freezes[ _IDFreezesIndex[account] ].delivered=_Freezes[ _IDFreezesIndex[account] ].delivered.add(withdraw);
     
-    _totalDelivered=_totalDelivered.sub(withdraw);
+    _totalDelivered=_totalDelivered.add(withdraw);
     return true;
 }
 
@@ -310,8 +310,9 @@ function getHowMuchUnfreezed(uint256 dateIni, uint256 dateEnd, uint256 fund) pub
     
     if( dateIni >= dateEnd ) return 0;
     
-    uint256 year=60*60*24*365;
+    //uint256 year=60*60*24*365;
     
+    uint256 year=31536000;
     uint256 secs= dateEnd.sub(dateIni);
     
     

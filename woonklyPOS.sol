@@ -45,7 +45,7 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
   using SafeMath for uint256;
   
   address internal _remainder;
-  //uint256 internal _fractionUnit;
+  
   address internal _woopERC20;
   uint256 internal _distributedCOIN;
   IInvestable internal  _inv;
@@ -68,7 +68,8 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
         {
         _paused=false;
         _remainder=remAcc;
-         _factor=10**8;
+         //_factor=10**8;
+         _factor=1000000000000000000;
         _distributedCOIN=0;
         _woopERC20=woopERC20;
         _investable=inv;
@@ -209,7 +210,8 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
     }
     
     function setFactor(uint256 newf) onlyIsInOwners public {
-        require(newf <= 10**9,">lim" );
+        //require(newf <= 10**9,">lim" );
+        require(newf <= 1000000000,">lim" );
         _factor=newf;
     }
     
@@ -218,11 +220,11 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
     }
 
     function getfractionUnit() public view returns(uint256){
-        return (10**9) * (10**18)  / _factor;
+        //return (10**9) * (10**18)  / _factor;
+        //return 1000000000 * 1000000000000000000  / _factor;
+        return uint256(1000000000000000000000000000).div( _factor);
     }
      
-
-
 
 
     function getDistributed(address sc) public view returns(uint256){
@@ -346,11 +348,7 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
     
 
 
-    function SYNCaddStake(address account, uint256 amount) Active onlyIsInOwners   public returns(bool){
-        require(  _addStake(   account, amount ) , "WO:eas");
-        return true;
-    }
-  
+    
     
     
     function _addStake(address account, uint256 amount) Active  internal returns(bool){
@@ -380,7 +378,7 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
     
     event WithdrawFunds( address account,uint256 amount,uint256 remainder);
 
-    function _withdrawFunds( address account, uint256 amount) Active  internal returns(uint256){
+    function _withdrawFunds( address account, uint256 amount) Active nonReentrant internal returns(uint256){
         
         require( _stakes.StakeExist(account),"WO:!");
         uint256 fund;
@@ -417,11 +415,11 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
         require( _stakes.StakeExist(_msgSender()),"WO:!");
         require(_inv.canWithdrawFunds(_msgSender(),amount,_stakes.balanceOf(_msgSender())),"WO:!i");
         
-        uint256 fund;
-        bool autoC;
+        //uint256 fund;
+        //bool autoC;
         IERC20 _token = IERC20(_woopERC20);
         
-        (fund,autoC)=_stakes.getStake(_msgSender());
+        //(fund,autoC)=_stakes.getStake(_msgSender());
 
         require(_token.transfer(_msgSender(), amount),"WO:ewf");
         _withdrawFunds(_msgSender(),  amount);
@@ -432,16 +430,7 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
     
 
 
-    function SYNCwithdrawFunds(address account, uint256 amount) Active onlyIsInOwners  public returns(bool){
-        
-        uint256 fund;
-        bool autoC;
 
-        (fund,autoC)=_stakes.getStake(account);
-        _withdrawFunds(account,  amount);
-        return true;
-    }
-    
 
 
 
@@ -479,7 +468,6 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
     event RewardToCompound(address account, uint256 amount);
     function _compoundReward(address account, uint256 amount) Active internal returns(uint256){
 
-        //require(sc==_woopERC20,"woonklyPOS: _compoundReward Error only for WOOPS ");
 
         uint256 rew=rewarded( _woopERC20, account);
          
@@ -528,7 +516,7 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
 
     event RewardCOINWithdrawed( address account,uint256 amount,uint256 remainder);
 
-    function _withdrawRewardCOIN(address account, uint256 amount) Active internal returns(uint256){
+    function _withdrawRewardCOIN(address account, uint256 amount) Active nonReentrant internal returns(uint256){
 
 
 
@@ -578,7 +566,9 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
         
         if(fund < getfractionUnit() ) return (0,0);
 
-        uint256 factor=fund / getfractionUnit();
+        //uint256 factor=fund / getfractionUnit();
+        
+        uint256 factor=fund.div( getfractionUnit());
         
         if(factor < 1) return (0,0);
         
@@ -595,7 +585,10 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
 
    function calcReward(uint256 amount, uint256 factor) public view returns(uint256){
         
-        return amount.mul(factor) / _factor;
+        //return amount.mul(factor) / _factor;
+        
+        return amount.mul(factor).div( _factor);
+        
        
    } 
    
@@ -654,19 +647,6 @@ struct Stake {
         }
 
 
-/*
-        for (uint32 i = 0; i < (_lastIndexStakes +1) ; i++) {
-            Stake memory p= _Stakes[ i ];
-            if(p.flag == 1 ){
-
-                (woopsRewards, remainder) = getCalcRewardAmount(p.account, amount );
-                if(woopsRewards>0){
-                    total=total.add(woopsRewards);
-                }
-                ind++;
-            }
-        }
-*/        
         return total;
     }
 
@@ -728,36 +708,13 @@ struct Stake {
         }//for
         
         
-        /*
-        for (uint32 i = 0; i < (_lastIndexStakes +1) ; i++) {
-            Stake memory p= _Stakes[ i ];
-            if(p.flag == 1 ){
-
-                (slot.woopsRewards, slot.remainder) = getCalcRewardAmount(p.account, amount );
-                if(slot.woopsRewards>0){
-
-                    if(getAutoCompoundStatus(p.account) && sc==_woopERC20 ){
-                        addToStake(p.account, slot.woopsRewards);
-                    }else{
-                         _increaseRewards( sc, p.account, slot.woopsRewards);
-                    }
-
-                    slot.dealed=slot.dealed.add(slot.woopsRewards);
-
-                }else{
-                    emit InsuficientRewardFund(sc, p.account);
-                }
-
-            }
-        }//for
-        */
         _distributeds[sc]=_distributeds[sc].add(slot.dealed);
         
         return slot.dealed;
     }
 
 
-//ValidTotalRewards(amount) 
+
     function processReward(address sc, uint256 amount) public 
          Active hasApprovedTokens(sc, _msgSender(), amount) ProviderHasToken(sc,amount)  
     returns(bool)  {
@@ -819,26 +776,6 @@ struct Stake {
         }//for
 
   
-/*        
-        for (uint32 i = 0; i < (_lastIndexStakes +1) ; i++) {
-            Stake memory p= _Stakes[ i ];
-            if(p.flag == 1 ){
-
-                (slot.woopsRewards, slot.remainder) = getCalcRewardAmount(p.account, amount );
-                
-                if(slot.woopsRewards>0){
-
-                    _increaseRewardsCOIN(  p.account, slot.woopsRewards);
-                    
-                    slot.dealed=slot.dealed.add(slot.woopsRewards);
-
-                }else{
-                    emit InsuficientRewardFundCOIN( p.account);
-                }
-
-            }
-        }//for
-  */      
         return slot.dealed;
     }
 
@@ -910,18 +847,6 @@ struct Stake {
             }
         }
             
-/*        
-
-        for (uint32 i = 0; i < (_lastIndexStakes +1) ; i++) {
-            Stake memory p= _Stakes[ i ];
-            if(p.flag == 1 ){
-                
-                (fund,autoC)=getStake(p.account);
-                _withdrawFunds(p.account, fund);
-                funds=funds.add(fund);
-            }
-        }
-  */      
         setPause(true);
         _stakes.removeAllStake();        
         
@@ -964,21 +889,6 @@ struct Stake {
             }
         }
             
-/*        
-        for (uint32 i = 0; i < (_lastIndexStakes +1) ; i++) {
-            Stake memory p= _Stakes[ i ];
-            if(p.flag == 1 ){
-                rew=rewardedCOIN( p.account);
-                
-                if(rew>0){
-                    _withdrawRewardCOIN( p.account, rew);    
-                    total=total.add(rew);
-                }
-                
-
-            }
-        }
-  */      
         uint256 eth_reserve = address(this).balance;
 
         if(eth_reserve>0){
@@ -1018,21 +928,6 @@ struct Stake {
         }
             
         
-/*        
-        for (uint32 i = 0; i < (_lastIndexStakes +1) ; i++) {
-            Stake memory p= _Stakes[ i ];
-            if(p.flag == 1 ){
-                
-                rew=rewarded( sc, p.account);
-                
-                if(rew>0){
-                    _withdrawReward(sc, p.account, rew);    
-                    total=total.add(rew);
-                }
-                
-            }
-        }
-  */      
         IERC20 _token = IERC20(sc);
         
         uint256 token_reserve = _token.balanceOf(address(this));
@@ -1163,34 +1058,7 @@ struct Stadistic{
             
             
             
-/*        
-        for (uint32 i = 0; i < (_lastIndexStakes +1) ; i++) {
-            Stake memory p= _Stakes[ i ];
-            if(p.flag == 1 ){
-                (fund,autoC)=getStake(p.account);
-                
-                if( sc==_woopERC20 ){
-                    funds=funds.add(fund);
-                }
-                
-                fund=rewarded( sc, p.account);
-                
-                rews=rews.add(fund);
- 
-                fund=rewardedCOIN(  p.account);
-                
-                rewsCOIN=rewsCOIN.add(fund);
-                
-
-                if(autoC){
-                    autocs++;
-                }
-                ind++;
-            }
-        }
-        
-        */
-        return (s.ind,s.funds,s.rews,s.rewsCOIN,s.autocs);
+       return (s.ind,s.funds,s.rews,s.rewsCOIN,s.autocs);
     }
 
 
