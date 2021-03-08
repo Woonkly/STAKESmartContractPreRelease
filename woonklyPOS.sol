@@ -715,7 +715,7 @@ struct Stake {
 
 
 
-    function processReward(address sc, uint256 amount) public 
+    function processReward(address sc, uint256 amount) nonReentrant  public 
          Active hasApprovedTokens(sc, _msgSender(), amount) ProviderHasToken(sc,amount)  
     returns(bool)  {
         
