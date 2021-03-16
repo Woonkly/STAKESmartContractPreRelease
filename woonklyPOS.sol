@@ -455,7 +455,8 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
         if(remainder==0){
             _doreward(sc, account, 0);
         }else{
-            require(_decreaseRewards( sc,  account, remainder),"WO:e--");    
+           // require(_decreaseRewards( sc,  account, remainder),"WO:e--");    
+            require(_decreaseRewards( sc,  account, amount),"WO:e--");    
         }
         
 
