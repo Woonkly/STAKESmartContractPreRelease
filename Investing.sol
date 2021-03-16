@@ -88,22 +88,30 @@ constructor () public   {
     }
 
     function FreezeIndexExist(uint256 index) public view returns (bool) {
-        
+        /*
         if(_FreezeCount==0) return false;
         
         if(index <  (_lastIndexFreezes + 1) ) return true;
         
         return false;
+
+        */
+
+        return (index <  (_lastIndexFreezes + 1) );
+
     }
 
 
     function _FreezeExist(uint256 FreezeID)internal view returns (bool) {
-        
+        /*
         //0 no exist  1 exist 2 deleted
         if(_Freezes[FreezeID].flag == 1 ){ 
             return true;
         }
         return false;         
+        */
+
+        return (_Freezes[FreezeID].flag == 1 );
     }
 
 
@@ -256,12 +264,16 @@ function canWithdrawFunds(address account,uint256 withdraw,uint256 currentFund) 
     if(!FreezeExist(account)) return true;
     
     uint256 can =howMuchCanWithdraw( account, currentFund);
-    
+    /*
     if(can >= withdraw) return true;
     
     return false;
+
+    */
     
+    return (can >= withdraw);
 }
+
 
 
 function howMuchCanWithdraw(address account,uint256 currentFund) public view returns(uint256){

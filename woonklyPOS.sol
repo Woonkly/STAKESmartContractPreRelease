@@ -209,9 +209,11 @@ contract WOOPStake is Owners,Pausabled,Erc20Manager,ReentrancyGuard {
         return true;
     }
     
+    event FactorChanged(uint256 oldf,uint256 newf);
     function setFactor(uint256 newf) onlyIsInOwners public {
         //require(newf <= 10**9,">lim" );
         require(newf <= 1000000000,">lim" );
+        emit FactorChanged(_factor,newf);
         _factor=newf;
     }
     

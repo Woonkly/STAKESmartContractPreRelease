@@ -62,10 +62,15 @@ constructor ()  internal {
 
 
     function hasContracts() public view returns(bool){
+        /*
         if(_E20Count==0) {
             return false;
         }
         return true;
+        */
+
+        return ( _E20Count==0 );
+
     }
 
     function getERC20Count() public view returns (uint256) {
@@ -82,23 +87,32 @@ constructor ()  internal {
     }
 
     function ERC20IndexExist(uint256 index) public view returns (bool) {
-        
+        /*
         if(_E20Count==0) return false;
         
         if(index <  (_lastIndexE20s + 1) ) return true;
         
         return false;
+        */
+
+        return (index <  (_lastIndexE20s + 1) );
+
     }
 
 
     function _E20Exist(uint256 E20ID)internal view returns (bool) {
         
+        /*
         //0 no exist  1 exist 2 deleted
         if(_E20s[E20ID].flag == 1 ){ 
             return true;
         }
         return false;         
+        */
+
+        return (_E20s[E20ID].flag == 1 );
     }
+
 
 
       modifier onlyNewERC20(address sc) {
@@ -157,12 +171,17 @@ function removeERC20(address sc) internal onlyERC20Exist(sc) {
 
 function getERC20ByIndex(uint256 index) public view  returns( address) {
     
+    /*
         if(!ERC20IndexExist( index)) return address(0);
      
         E20 memory p= _E20s[ index ];
          
         return p.sc;
-    }
+    */
+
+    return _E20s[ index ].sc;     
+}
+
 
 
 
