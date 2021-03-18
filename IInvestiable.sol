@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+pragma solidity ^0.6.6;
 
 
 /**
@@ -26,7 +27,7 @@ SOFTWARE.
 
 */
 
-pragma solidity ^0.6.6;
+
 
 
 interface IInvestable{
