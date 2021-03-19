@@ -34,19 +34,48 @@ SOFTWARE.
 contract StakeManager is Owners, ERC20 {
     using SafeMath for uint256;
 
+    //Section Type declarations
+
     struct Stake {
         address account;
         bool autoCompound;
         uint8 flag; //0 no exist  1 exist 2 deleted
     }
 
-    // las index of
+    //Section State variables
+
     uint256 internal _lastIndexStakes;
-    // store new  by internal  id (_lastIndexStakes)
     mapping(uint256 => Stake) internal _Stakes;
-    // store address  -> internal  id (_lastIndexStakes)
     mapping(address => uint256) internal _IDStakesIndex;
     uint256 internal _StakeCount;
+
+    //Section Modifier
+
+    modifier onlyNewStake(address account) {
+        require(!this.StakeExist(account), "This Stake account exist");
+        _;
+    }
+
+    modifier onlyStakeExist(address account) {
+        require(StakeExist(account), "This Stake account not exist");
+        _;
+    }
+
+    modifier onlyStakeIndexExist(uint256 index) {
+        require(StakeIndexExist(index), "This Stake index not exist");
+        _;
+    }
+
+    //Section Events
+
+    event addNewStake(address account, uint256 amount);
+    event StakeAdded(address account, uint256 oldAmount, uint256 newAmount);
+    event StakeReNewed(address account, uint256 oldAmount, uint256 newAmount);
+    event AutoCompoundChanged(address account, bool active);
+    event StakeRemoved(address account);
+    event AllStakeRemoved();
+
+    //Section functions
 
     constructor(string memory name, string memory symbol)
         public
@@ -105,23 +134,6 @@ contract StakeManager is Owners, ERC20 {
         return (_Stakes[StakeID].flag == 1);
     }
 
-    modifier onlyNewStake(address account) {
-        require(!this.StakeExist(account), "This Stake account exist");
-        _;
-    }
-
-    modifier onlyStakeExist(address account) {
-        require(StakeExist(account), "This Stake account not exist");
-        _;
-    }
-
-    modifier onlyStakeIndexExist(uint256 index) {
-        require(StakeIndexExist(index), "This Stake index not exist");
-        _;
-    }
-
-    event addNewStake(address account, uint256 amount);
-
     function newStake(address account, uint256 amount)
         external
         onlyIsInOwners
@@ -145,8 +157,6 @@ contract StakeManager is Owners, ERC20 {
         return _lastIndexStakes;
     }
 
-    event StakeAdded(address account, uint256 oldAmount, uint256 newAmount);
-
     function addToStake(address account, uint256 addAmount)
         public
         onlyIsInOwners
@@ -162,8 +172,6 @@ contract StakeManager is Owners, ERC20 {
 
         return _IDStakesIndex[account];
     }
-
-    event StakeReNewed(address account, uint256 oldAmount, uint256 newAmount);
 
     function renewStake(address account, uint256 newAmount)
         external
@@ -185,8 +193,6 @@ contract StakeManager is Owners, ERC20 {
         return _IDStakesIndex[account];
     }
 
-    event AutoCompoundChanged(address account, bool active);
-
     function setAutoCompound(address account, bool active)
         public
         onlyIsInOwners
@@ -200,8 +206,6 @@ contract StakeManager is Owners, ERC20 {
         );
         return _IDStakesIndex[account];
     }
-
-    event StakeRemoved(address account);
 
     function removeStake(address account)
         external
@@ -283,8 +287,6 @@ contract StakeManager is Owners, ERC20 {
 
         return (indexs, pACCs, pAmounts, pAuto);
     }
-
-    event AllStakeRemoved();
 
     function removeAllStake() external onlyIsInOwners returns (bool) {
         for (uint32 i = 0; i < (_lastIndexStakes + 1); i++) {

@@ -33,6 +33,7 @@ SOFTWARE.
 contract Investing is Owners {
     using SafeMath for uint256;
 
+    //Section Type declarations
     struct Freeze {
         address account;
         uint256 fund;
@@ -41,16 +42,37 @@ contract Investing is Owners {
         uint8 flag; //0 no exist  1 exist 2 deleted
     }
 
-    // las index of
+    //Section State variables
+
     uint256 internal _lastIndexFreezes;
-    // store new  by internal  id (_lastIndexFreezes)
     mapping(uint256 => Freeze) internal _Freezes;
-    // store address  -> internal  id (_lastIndexFreezes)
     mapping(address => uint256) internal _IDFreezesIndex;
     uint256 internal _FreezeCount;
-
     uint256 _totalFunds;
     uint256 _totalDelivered;
+
+    //Section Modifier
+    modifier onlyNewFreeze(address account) {
+        require(!this.FreezeExist(account), "This Freeze account exist");
+        _;
+    }
+
+    modifier onlyFreezeExist(address account) {
+        require(FreezeExist(account), "This Freeze account not exist");
+        _;
+    }
+
+    modifier onlyFreezeIndexExist(uint256 index) {
+        require(FreezeIndexExist(index), "This Freeze index not exist");
+        _;
+    }
+
+    //Section Events
+
+    event addNewFreeze(address account, uint256 amount);
+    event FreezeRemoved(address account);
+
+    //Section functions
 
     constructor() public {
         _lastIndexFreezes = 0;
@@ -108,23 +130,6 @@ contract Investing is Owners {
         return (_Freezes[FreezeID].flag == 1);
     }
 
-    modifier onlyNewFreeze(address account) {
-        require(!this.FreezeExist(account), "This Freeze account exist");
-        _;
-    }
-
-    modifier onlyFreezeExist(address account) {
-        require(FreezeExist(account), "This Freeze account not exist");
-        _;
-    }
-
-    modifier onlyFreezeIndexExist(uint256 index) {
-        require(FreezeIndexExist(index), "This Freeze index not exist");
-        _;
-    }
-
-    event addNewFreeze(address account, uint256 amount);
-
     function _newFreeze(
         address account,
         uint256 amount,
@@ -156,8 +161,6 @@ contract Investing is Owners {
         require(amount > 0, "newFreeze: 0 amount!");
         return _newFreeze(account, amount, now);
     }
-
-    event FreezeRemoved(address account);
 
     function _removeFreeze(address account) internal onlyFreezeExist(account) {
         _totalFunds = _totalFunds.sub(_Freezes[_IDFreezesIndex[account]].fund);

@@ -33,18 +33,43 @@ SOFTWARE.
 contract Erc20Manager is Context {
     using SafeMath for uint256;
 
+    //Section Type declarations
+
     struct E20 {
         address sc;
         uint8 flag; //0 no exist  1 exist 2 deleted
     }
 
-    // las index of
+    //Section State variables
+
     uint256 internal _lastIndexE20s;
-    // store new  by internal  id (_lastIndexE20s)
     mapping(uint256 => E20) internal _E20s;
-    // store address  -> internal  id (_lastIndexE20s)
     mapping(address => uint256) internal _IDE20sIndex;
     uint256 internal _E20Count;
+
+    //Section Modifier
+
+    modifier onlyNewERC20(address sc) {
+        require(!this.ERC20Exist(sc), "E2 Exist");
+        _;
+    }
+
+    modifier onlyERC20Exist(address sc) {
+        require(this.ERC20Exist(sc), "E2 !Exist");
+        _;
+    }
+
+    modifier onlyERC20IndexExist(uint256 index) {
+        require(this.ERC20IndexExist(index), "E2I !Exist");
+        _;
+    }
+
+    //Section Events
+
+    event NewERC20(address sc);
+    event ERC20Removed(address sc);
+
+    //Section functions
 
     constructor() internal {
         _lastIndexE20s = 0;
@@ -98,23 +123,6 @@ contract Erc20Manager is Context {
         return (_E20s[E20ID].flag == 1);
     }
 
-    modifier onlyNewERC20(address sc) {
-        require(!this.ERC20Exist(sc), "E2 Exist");
-        _;
-    }
-
-    modifier onlyERC20Exist(address sc) {
-        require(this.ERC20Exist(sc), "E2 !Exist");
-        _;
-    }
-
-    modifier onlyERC20IndexExist(uint256 index) {
-        require(this.ERC20IndexExist(index), "E2I !Exist");
-        _;
-    }
-
-    event NewERC20(address sc);
-
     function newERC20(address sc) internal onlyNewERC20(sc) returns (uint256) {
         _lastIndexE20s = _lastIndexE20s.add(1);
         _E20Count = _E20Count.add(1);
@@ -127,8 +135,6 @@ contract Erc20Manager is Context {
         emit NewERC20(sc);
         return _lastIndexE20s;
     }
-
-    event ERC20Removed(address sc);
 
     function removeERC20(address sc) internal onlyERC20Exist(sc) {
         _E20s[_IDE20sIndex[sc]].flag = 2;

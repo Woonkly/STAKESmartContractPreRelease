@@ -39,20 +39,148 @@ SOFTWARE.
 contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     using SafeMath for uint256;
 
-    address internal _remainder;
+    //Section Type declarations
+    struct Stake {
+        address account;
+        uint256 bal;
+        bool autoCompound;
+        uint8 flag; //0 no exist  1 exist 2 deleted
+    }
 
+    struct processRewardInfo {
+        uint256 remainder;
+        uint256 woopsRewards;
+        uint256 dealed;
+        address me;
+        bool resp;
+    }
+
+    struct Stadistic {
+        uint256 ind;
+        uint256 funds;
+        uint256 rews;
+        uint256 rewsCOIN;
+        uint256 autocs;
+    }
+
+    //Section State variables
+
+    address internal _remainder;
     address internal _woopERC20;
     uint256 internal _distributedCOIN;
     IInvestable internal _inv;
     IWStaked internal _stakes;
     address internal _investable;
     address internal _stakeable;
-
     uint256 _factor;
-
     mapping(address => mapping(address => uint256)) private _rewards;
     mapping(address => uint256) private _rewardsCOIN;
     mapping(address => uint256) private _distributeds;
+
+    //Section Modifier
+
+    modifier IhaveEnoughTokens(address sc, uint256 token_amount) {
+        uint256 amount = getMyTokensBalance(sc);
+        require(token_amount <= amount, "-tk");
+        _;
+    }
+
+    modifier IhaveEnoughCoins(uint256 coins) {
+        uint256 amount = getMyCoinBalance();
+        require(coins <= amount, "-coin");
+        _;
+    }
+
+    modifier hasApprovedTokens(
+        address sc,
+        address sender,
+        uint256 token_amount
+    ) {
+        IERC20 _token = IERC20(sc);
+        require(
+            _token.allowance(sender, address(this)) >= token_amount,
+            "!aptk"
+        ); //sender != address(0) &&
+        _;
+    }
+
+    modifier ProviderHasToken(address sc, uint256 amount) {
+        uint256 total = calcTotalRewards(amount);
+        require(total <= getTokensBalanceOf(sc, _msgSender()), "WOO:tk-");
+        _;
+    }
+
+    modifier IhaveAprovedRewardTokens(address sc, uint256 amount) {
+        uint256 total = calcTotalRewards(amount);
+        IERC20 _token = IERC20(sc);
+        require(
+            _token.allowance(_msgSender(), address(this)) >= total,
+            "WOO:-apt"
+        );
+
+        _;
+    }
+
+    modifier Solvency(address sc) {
+        bool isSolvency;
+        uint256 solvent;
+
+        (isSolvency, solvent) = getSolvency(sc);
+
+        require(isSolvency, "WO:sol!");
+        _;
+    }
+
+    modifier SolvencyCOIN() {
+        bool isSolvency;
+        uint256 solvent;
+
+        (isSolvency, solvent) = getSolvencyCOIN();
+
+        require(isSolvency, "WO:sol!");
+        _;
+    }
+
+    //Section Events
+
+    event RewardedCOIN(address account, uint256 reward);
+    event RewardedCOIN(address account, uint256 reward);
+    event CoinReceived(uint256 coins);
+    event FactorChanged(uint256 oldf, uint256 newf);
+    event DistributedReseted(address sc, uint256 old);
+    event DistributedCOINReseted(uint256 old);
+    event RemaninderAccChanged(address old, address newr);
+    event ERC20WOOPChanged(address old, address newr);
+    event VestingChanged(address old, address newi);
+    event StakeAddrChanged(address old, address news);
+    event WithdrawFunds(address account, uint256 amount, uint256 remainder);
+    event RewardWithdrawed(
+        address sc,
+        address account,
+        uint256 amount,
+        uint256 remainder
+    );
+    event RewardToCompound(address account, uint256 amount);
+
+    event RewardCOINWithdrawed(
+        address account,
+        uint256 amount,
+        uint256 remainder
+    );
+
+    event InsuficientRewardFund(address sc, address account);
+    event NewLeftover(address sc, address account, uint256 leftover);
+    event InsuficientRewardFundCOIN(address account);
+    event NewLeftoverCOIN(address account, uint256 leftover);
+
+    event StakeClosed(
+        uint256 csc,
+        uint256 stakes,
+        uint256 totFunds,
+        uint256 totRew
+    );
+
+    //Section functions
 
     constructor(
         address remAcc,
@@ -71,8 +199,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         _stakeable = stake;
         _stakes = IWStaked(stake);
     }
-
-    event RewardedCOIN(address account, uint256 reward);
 
     function _dorewardCOIN(address account, uint256 reward) internal {
         require(account != address(0), "WO:0addr");
@@ -111,8 +237,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         );
         return true;
     }
-
-    event Rewarded(address sc, address account, uint256 reward);
 
     function _doreward(
         address sc,
@@ -165,8 +289,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return true;
     }
 
-    event CoinReceived(uint256 coins);
-
     receive() external payable {
         // React to receiving ether
         _processRewardCOIN(msg.value);
@@ -198,31 +320,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return _token.balanceOf(account);
     }
 
-    modifier IhaveEnoughTokens(address sc, uint256 token_amount) {
-        uint256 amount = getMyTokensBalance(sc);
-        require(token_amount <= amount, "-tk");
-        _;
-    }
-
-    modifier IhaveEnoughCoins(uint256 coins) {
-        uint256 amount = getMyCoinBalance();
-        require(coins <= amount, "-coin");
-        _;
-    }
-
-    modifier hasApprovedTokens(
-        address sc,
-        address sender,
-        uint256 token_amount
-    ) {
-        IERC20 _token = IERC20(sc);
-        require(
-            _token.allowance(sender, address(this)) >= token_amount,
-            "!aptk"
-        ); //sender != address(0) &&
-        _;
-    }
-
     function addErc20STK(address sc) public onlyIsInOwners returns (bool) {
         newERC20(sc);
         return true;
@@ -232,8 +329,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         removeERC20(sc);
         return true;
     }
-
-    event FactorChanged(uint256 oldf, uint256 newf);
 
     function setFactor(uint256 newf) public onlyIsInOwners {
         //require(newf <= 10**9,">lim" );
@@ -256,8 +351,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return _distributeds[sc];
     }
 
-    event DistributedReseted(address sc, uint256 old);
-
     function resetDistributed(address sc) public onlyIsInOwners returns (bool) {
         uint256 old = _distributeds[sc];
         _distributeds[sc] = 0;
@@ -269,8 +362,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return _distributedCOIN;
     }
 
-    event DistributedCOINReseted(uint256 old);
-
     function resetDistributedCOIN() public onlyIsInOwners returns (bool) {
         uint256 old = _distributedCOIN;
         _distributedCOIN = 0;
@@ -281,8 +372,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     function getRemaninderAcc() public view returns (address) {
         return _remainder;
     }
-
-    event RemaninderAccChanged(address old, address newr);
 
     function setRemaniderAcc(address newr)
         public
@@ -300,8 +389,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return _woopERC20;
     }
 
-    event ERC20WOOPChanged(address old, address newr);
-
     function setERC20WOOP(address newr) public onlyIsInOwners returns (bool) {
         require(newr != address(0), "!0ad");
         address old = _woopERC20;
@@ -313,8 +400,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     function getVesting() public view returns (address) {
         return _investable;
     }
-
-    event VestingChanged(address old, address newi);
 
     function setVesting(address newi) public onlyIsInOwners returns (bool) {
         require(newi != address(0), "!0ad");
@@ -328,8 +413,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     function getStakeAddr() public view returns (address) {
         return _stakeable;
     }
-
-    event StakeAddrChanged(address old, address news);
 
     function setStakeAddr(address news) public onlyIsInOwners returns (bool) {
         require(news != address(0), "!0ad");
@@ -390,8 +473,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return true;
     }
 
-    event WithdrawFunds(address account, uint256 amount, uint256 remainder);
-
     function _withdrawFunds(address account, uint256 amount)
         internal
         Active
@@ -443,13 +524,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return true;
     }
 
-    event RewardWithdrawed(
-        address sc,
-        address account,
-        uint256 amount,
-        uint256 remainder
-    );
-
     function _withdrawReward(
         address sc,
         address account,
@@ -478,8 +552,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
 
         return amount;
     }
-
-    event RewardToCompound(address account, uint256 amount);
 
     function _compoundReward(address account, uint256 amount)
         internal
@@ -523,12 +595,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
 
         return true;
     }
-
-    event RewardCOINWithdrawed(
-        address account,
-        uint256 amount,
-        uint256 remainder
-    );
 
     function _withdrawRewardCOIN(address account, uint256 amount)
         internal
@@ -604,30 +670,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return amount.mul(factor).div(_factor);
     }
 
-    modifier ProviderHasToken(address sc, uint256 amount) {
-        uint256 total = calcTotalRewards(amount);
-        require(total <= getTokensBalanceOf(sc, _msgSender()), "WOO:tk-");
-        _;
-    }
-
-    modifier IhaveAprovedRewardTokens(address sc, uint256 amount) {
-        uint256 total = calcTotalRewards(amount);
-        IERC20 _token = IERC20(sc);
-        require(
-            _token.allowance(_msgSender(), address(this)) >= total,
-            "WOO:-apt"
-        );
-
-        _;
-    }
-
-    struct Stake {
-        address account;
-        uint256 bal;
-        bool autoCompound;
-        uint8 flag; //0 no exist  1 exist 2 deleted
-    }
-
     function calcTotalRewards(uint256 amount) public view returns (uint256) {
         uint256 remainder;
         uint256 woopsRewards;
@@ -655,17 +697,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         }
 
         return total;
-    }
-
-    event InsuficientRewardFund(address sc, address account);
-    event NewLeftover(address sc, address account, uint256 leftover);
-
-    struct processRewardInfo {
-        uint256 remainder;
-        uint256 woopsRewards;
-        uint256 dealed;
-        address me;
-        bool resp;
     }
 
     function _processReward_1(
@@ -746,9 +777,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return true;
     }
 
-    event InsuficientRewardFundCOIN(address account);
-    event NewLeftoverCOIN(address account, uint256 leftover);
-
     function _processReward_2COIN(uint256 amount) internal returns (uint256) {
         processRewardInfo memory slot;
         Stake memory p;
@@ -801,13 +829,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
 
         return true;
     }
-
-    event StakeClosed(
-        uint256 csc,
-        uint256 stakes,
-        uint256 totFunds,
-        uint256 totRew
-    );
 
     function closeStakes() public onlyIsInOwners nonReentrant returns (bool) {
         uint256 totRew = 0;
@@ -921,26 +942,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return total;
     }
 
-    modifier Solvency(address sc) {
-        bool isSolvency;
-        uint256 solvent;
-
-        (isSolvency, solvent) = getSolvency(sc);
-
-        require(isSolvency, "WO:sol!");
-        _;
-    }
-
-    modifier SolvencyCOIN() {
-        bool isSolvency;
-        uint256 solvent;
-
-        (isSolvency, solvent) = getSolvencyCOIN();
-
-        require(isSolvency, "WO:sol!");
-        _;
-    }
-
     function getSolvencyCOIN() public view returns (bool, uint256) {
         uint256 ind = 0;
         uint256 funds = 0;
@@ -957,14 +958,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         } else {
             return (true, coins - rewsc);
         }
-    }
-
-    struct Stadistic {
-        uint256 ind;
-        uint256 funds;
-        uint256 rews;
-        uint256 rewsCOIN;
-        uint256 autocs;
     }
 
     function getSolvency(address sc) public view returns (bool, uint256) {

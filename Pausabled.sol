@@ -29,8 +29,12 @@ SOFTWARE.
 */
 
 contract Pausabled is Owners {
+    //Section Type declarations
+
+    //Section State variables
     bool internal _paused;
 
+    //Section Modifier
     modifier Active() {
         require(!isPaused(), "paused");
         _;
@@ -40,6 +44,7 @@ contract Pausabled is Owners {
         return _paused;
     }
 
+    //Section Events
     event Paused(bool paused);
 
     function _setPause(bool paused) internal virtual returns (bool) {
@@ -48,6 +53,7 @@ contract Pausabled is Owners {
         return true;
     }
 
+    //Section functions
     function setPause(bool paused)
         public
         virtual
