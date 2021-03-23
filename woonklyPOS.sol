@@ -500,7 +500,7 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return amount;
     }
 
-    function withdrawFunds(uint256 amount) public Active returns (bool) {
+    function withdrawFunds(uint256 amount) public Active nonReentrant returns (bool) {
         require(_stakes.StakeExist(_msgSender()), "WO:!");
         require(
             _inv.canWithdrawFunds(
@@ -511,11 +511,8 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
             "WO:!i"
         );
 
-        //uint256 fund;
-        //bool autoC;
         IERC20 _token = IERC20(_woopERC20);
 
-        //(fund,autoC)=_stakes.getStake(_msgSender());
 
         require(_token.transfer(_msgSender(), amount), "WO:ewf");
         _withdrawFunds(_msgSender(), amount);
