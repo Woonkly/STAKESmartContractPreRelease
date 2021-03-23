@@ -77,14 +77,8 @@ contract Erc20Manager is Context {
     }
 
     function hasContracts() external view returns (bool) {
-        /*
-        if(_E20Count==0) {
-            return false;
-        }
-        return true;
-        */
 
-        return (_E20Count == 0);
+        return (_E20Count > 0);
     }
 
     function getERC20Count() external view returns (uint256) {
@@ -100,25 +94,10 @@ contract Erc20Manager is Context {
     }
 
     function ERC20IndexExist(uint256 index) public view returns (bool) {
-        /*
-        if(_E20Count==0) return false;
-        
-        if(index <  (_lastIndexE20s + 1) ) return true;
-        
-        return false;
-        */
-
         return (index < (_lastIndexE20s + 1));
     }
 
     function _E20Exist(uint256 E20ID) internal view returns (bool) {
-        /*
-        //0 no exist  1 exist 2 deleted
-        if(_E20s[E20ID].flag == 1 ){ 
-            return true;
-        }
-        return false;         
-        */
 
         return (_E20s[E20ID].flag == 1);
     }
@@ -144,13 +123,6 @@ contract Erc20Manager is Context {
     }
 
     function getERC20ByIndex(uint256 index) external view returns (address) {
-        /*
-        if(!ERC20IndexExist( index)) return address(0);
-     
-        E20 memory p= _E20s[ index ];
-         
-        return p.sc;
-    */
 
         return _E20s[index].sc;
     }
@@ -175,19 +147,4 @@ contract Erc20Manager is Context {
 
         return (indexs, pACCs);
     }
-    /*
-event AllERC20Removed();
-function removeAllERC20() internal returns(bool){
-    for (uint32 i = 0; i < (_lastIndexE20s +1) ; i++) {
-        _IDE20sIndex[_E20s[ i ].sc] = 0;
-        _E20s[ i ].flag=0;
-        _E20s[ i ].sc=address(0);
-    }
-    _lastIndexE20s = 0;
-    _E20Count = 0;
-    emit AllERC20Removed();
-    return true;
-}
-  
-*/
 }
