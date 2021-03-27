@@ -144,7 +144,7 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     //Section Events
 
     event RewardedCOIN(address account, uint256 reward);
-    event RewardedCOIN(address account, uint256 reward);
+    event Rewarded(address sc, address account, uint256 reward);
     event CoinReceived(uint256 coins);
     event FactorChanged(uint256 oldf, uint256 newf);
     event DistributedReseted(address sc, uint256 old);
