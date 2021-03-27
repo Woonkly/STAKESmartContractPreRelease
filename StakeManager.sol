@@ -91,10 +91,7 @@ contract StakeManager is Owners, ERC20 {
         uint256 amount
     ) internal virtual override {
         require(false);
-
-        //require(_inv.canWithdrawFunds(sender,amount,balanceOf(sender)),"WO:!i");
         // super._transfer(sender,recipient,amount);
-        //_inv.updateFund(sender,amount);
     }
 
     function getStakeCount() public view returns (uint256) {
@@ -110,27 +107,10 @@ contract StakeManager is Owners, ERC20 {
     }
 
     function StakeIndexExist(uint256 index) public view returns (bool) {
-        /*
-        if(_StakeCount==0) return false;
-        
-        if(index <  (_lastIndexStakes + 1) ) return true;
-        
-        return false;
-        */
-
         return (index < (_lastIndexStakes + 1));
     }
 
     function _StakeExist(uint256 StakeID) internal view returns (bool) {
-        /*
-        //0 no exist  1 exist 2 deleted
-        if(_Stakes[StakeID].flag == 1 ){ 
-            return true;
-        }
-        return false;         
-
-        */
-
         return (_Stakes[StakeID].flag == 1);
     }
 

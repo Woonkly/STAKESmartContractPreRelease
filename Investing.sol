@@ -106,27 +106,10 @@ contract Investing is Owners {
     }
 
     function FreezeIndexExist(uint256 index) public view returns (bool) {
-        /*
-        if(_FreezeCount==0) return false;
-        
-        if(index <  (_lastIndexFreezes + 1) ) return true;
-        
-        return false;
-
-        */
-
         return (index < (_lastIndexFreezes + 1));
     }
 
     function _FreezeExist(uint256 FreezeID) internal view returns (bool) {
-        /*
-        //0 no exist  1 exist 2 deleted
-        if(_Freezes[FreezeID].flag == 1 ){ 
-            return true;
-        }
-        return false;         
-        */
-
         return (_Freezes[FreezeID].flag == 1);
     }
 
@@ -280,12 +263,6 @@ contract Investing is Owners {
         if (!FreezeExist(account)) return true;
 
         uint256 can = howMuchCanWithdraw(account, currentFund);
-        /*
-        if(can >= withdraw) return true;
-        
-        return false;
-
-        */
 
         return (can >= withdraw);
     }
@@ -338,14 +315,10 @@ contract Investing is Owners {
 
         if (dateIni >= dateEnd) return 0;
 
-        //uint256 year=60*60*24*365;
-
         uint256 year = 31536000;
         uint256 secs = dateEnd.sub(dateIni);
 
         uint8 yearsq = uint8(secs / year);
-
-        //if(yearsq==0) return 0;
 
         uint8 perc = getPercent(yearsq);
 
@@ -353,8 +326,6 @@ contract Investing is Owners {
     }
 
     function getPercent(uint8 yearsq) public pure returns (uint8) {
-        //if(yearsq >= 0 && yearsq < 14 ){
-
         if (yearsq < 14) {
             return yearsq;
         }

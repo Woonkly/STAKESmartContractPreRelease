@@ -77,7 +77,6 @@ contract Erc20Manager is Context {
     }
 
     function hasContracts() external view returns (bool) {
-
         return (_E20Count > 0);
     }
 
@@ -98,7 +97,6 @@ contract Erc20Manager is Context {
     }
 
     function _E20Exist(uint256 E20ID) internal view returns (bool) {
-
         return (_E20s[E20ID].flag == 1);
     }
 
@@ -123,7 +121,6 @@ contract Erc20Manager is Context {
     }
 
     function getERC20ByIndex(uint256 index) external view returns (address) {
-
         return _E20s[index].sc;
     }
 

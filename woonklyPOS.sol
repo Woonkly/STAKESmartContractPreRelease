@@ -191,7 +191,9 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         _paused = false;
         _remainder = remAcc;
         //_factor=10**8;
-        _factor = 1000000000000000000;
+        //factor = 1000000000000000000;
+
+        _factor = 100000000;
         _distributedCOIN = 0;
         _woopERC20 = woopERC20;
         _investable = inv;
@@ -331,7 +333,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     }
 
     function setFactor(uint256 newf) public onlyIsInOwners {
-        //require(newf <= 10**9,">lim" );
         require(newf <= 1000000000, ">lim");
         emit FactorChanged(_factor, newf);
         _factor = newf;
@@ -342,8 +343,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     }
 
     function getfractionUnit() public view returns (uint256) {
-        //return (10**9) * (10**18)  / _factor;
-        //return 1000000000 * 1000000000000000000  / _factor;
         return uint256(1000000000000000000000000000).div(_factor);
     }
 
@@ -461,12 +460,8 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         returns (bool)
     {
         if (!_stakes.StakeExist(account)) {
-            //NEW
-
             _stakes.newStake(account, amount);
         } else {
-            //has funds
-
             _stakes.addToStake(account, amount);
         }
 
@@ -476,7 +471,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     function _withdrawFunds(address account, uint256 amount)
         internal
         Active
-        nonReentrant
         returns (uint256)
     {
         require(_stakes.StakeExist(account), "WO:!");
@@ -500,7 +494,12 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return amount;
     }
 
-    function withdrawFunds(uint256 amount) public Active nonReentrant returns (bool) {
+    function withdrawFunds(uint256 amount)
+        public
+        Active
+        nonReentrant
+        returns (bool)
+    {
         require(_stakes.StakeExist(_msgSender()), "WO:!");
         require(
             _inv.canWithdrawFunds(
@@ -512,7 +511,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         );
 
         IERC20 _token = IERC20(_woopERC20);
-
 
         require(_token.transfer(_msgSender(), amount), "WO:ewf");
         _withdrawFunds(_msgSender(), amount);
@@ -541,7 +539,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         if (remainder == 0) {
             _doreward(sc, account, 0);
         } else {
-            // require(_decreaseRewards( sc,  account, remainder),"WO:e--");
             require(_decreaseRewards(sc, account, amount), "WO:e--");
         }
 
@@ -553,7 +550,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     function _compoundReward(address account, uint256 amount)
         internal
         Active
-        nonReentrant
         returns (uint256)
     {
         uint256 rew = rewarded(_woopERC20, account);
@@ -587,7 +583,12 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         return true;
     }
 
-    function CompoundReward(uint256 amount) public Active returns (bool) {
+    function CompoundReward(uint256 amount)
+        public
+        Active
+        nonReentrant
+        returns (bool)
+    {
         _compoundReward(_msgSender(), amount);
 
         return true;
@@ -642,8 +643,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
 
         if (fund < getfractionUnit()) return (0, 0);
 
-        //uint256 factor=fund / getfractionUnit();
-
         uint256 factor = fund.div(getfractionUnit());
 
         if (factor < 1) return (0, 0);
@@ -662,8 +661,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         view
         returns (uint256)
     {
-        //return amount.mul(factor) / _factor;
-
         return amount.mul(factor).div(_factor);
     }
 
@@ -811,7 +808,6 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     {
         processRewardInfo memory slot;
 
-        //address payable nrem = address(uint160(address(_remainder)));
         address payable nrem = address(uint160(_remainder));
 
         slot.dealed = _processReward_2COIN(amount);
@@ -960,7 +956,7 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
     function getSolvency(address sc) public view returns (bool, uint256) {
         Stadistic memory s;
 
-        (s.ind, s.funds, , , ) = getStatistics(sc);
+        (s.ind, s.funds, s.rews, , ) = getStatistics(sc);
 
         uint256 tokens = getMyTokensBalance(sc);
 
