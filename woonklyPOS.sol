@@ -489,7 +489,7 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
             _stakes.renewStake(account, remainder);
         }
 
-        WithdrawFunds(account, amount, remainder);
+        emit WithdrawFunds(account, amount, remainder);
 
         return amount;
     }
@@ -536,13 +536,12 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
 
         uint256 remainder = rew.sub(amount);
 
-        if (remainder == 0) {
-            _doreward(sc, account, 0);
-        } else {
-            require(_decreaseRewards(sc, account, amount), "WO:e--");
-        }
 
-        RewardWithdrawed(sc, account, amount, remainder);
+        //fix critical issue by coin Fabrik
+        _doreward(sc, account, remainder);
+
+
+       emit RewardWithdrawed(sc, account, amount, remainder);
 
         return amount;
     }
@@ -560,15 +559,14 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
 
         uint256 remainder = rew.sub(amount);
 
-        if (remainder == 0) {
-            _doreward(_woopERC20, account, 0);
-        } else {
-            require(_decreaseRewards(_woopERC20, account, remainder), "WO:e--");
-        }
+
+        //fix critical issue by coin Fabrik
+        _doreward(_woopERC20, account, remainder);
+
 
         _stakes.addToStake(account, amount);
 
-        RewardToCompound(account, amount);
+        emit RewardToCompound(account, amount);
 
         return amount;
     }
@@ -612,13 +610,11 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
 
         uint256 remainder = rew.sub(amount);
 
-        if (remainder == 0) {
-            _dorewardCOIN(account, 0);
-        } else {
-            require(_decreaseRewardsCOIN(account, remainder), "WO:e--");
-        }
 
-        RewardCOINWithdrawed(account, amount, remainder);
+        //fix critical issue by coin Fabrik
+        _dorewardCOIN(account,remainder);
+
+        emit RewardCOINWithdrawed(account, amount, remainder);
 
         return amount;
     }
@@ -858,7 +854,7 @@ contract WOOPStake is Owners, Pausabled, Erc20Manager, ReentrancyGuard {
         setPause(true);
         _stakes.removeAllStake();
 
-        StakeClosed(toSC, (last + 1), funds, totRew);
+        emit StakeClosed(toSC, (last + 1), funds, totRew);
         return true;
     }
 
